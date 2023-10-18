@@ -30,6 +30,13 @@ module _ (e : Env) where
   a s₀ s₁ = ∑ λ x -> act e x (λ p _ -> s₀ p) (λ p _ -> s₁ p)
 
 
+  Trace : (s t : State) -> Set
+  Trace = Path a
+
+  -- data Trace : (s t : State) -> Set where
+  --   [] : ∀{t} -> Trace t t
+  --   _∷[_]_ : ∀{}
+
 ------------------------------------------------------------------------
 -- example: the SR (send-receive) language
 
@@ -53,7 +60,7 @@ instance
   _ = record { ⟦_⟧ = eval-SRType }
 
 
-module _ (Proc : Set) where
+module _ {Proc : Set} where
 
   data SRCommand (p : Proc) : (A B : SRType) -> Set where
     compute : ∀{A B} -> (⟦ A ⟧ -> ⟦ B ⟧) -> SRCommand p A B
@@ -72,7 +79,6 @@ module _ (Proc : Set) where
 
   Op-SR : Set
   Op-SR = SROp
-  -- ∑ λ p -> ∑ λ A -> ∑ λ B -> SRCommand p A B
 
   π-SR-impl : ∀{p A B} -> SRCommand p A B -> 𝒫 Proc
   π-SR-impl {p} (compute x) = singl p
@@ -82,7 +88,6 @@ module _ (Proc : Set) where
   π-SR : Op-SR -> 𝒫 Proc
   π-SR (compute p f) = singl p
   π-SR (move p q X) = singl p ∪-𝒫 singl q
-  -- λ (p , A , B , x) -> π-SR-impl x
 
   data act-SR : ∀ x -> (∀ p -> π-SR x p -> E-SR p) -> (∀ p -> π-SR x p -> E-SR p) -> Set where
     compute : ∀{A B C : SRType} -> ∀ p -> (f : ⟦ A ⟧ -> ⟦ B ⟧) -> (a : ⟦ A ⟧)
@@ -109,10 +114,29 @@ module _ (Proc : Set) where
     ; act = act-SR
     }
 
-  -- isEnv:SRTerm : isEnv SRTerm
-  -- isEnv:SRTerm = ?
+------------------------------------------------------------------------
+-- example with two processes
 
+data Proc2 : Set where
+  p q : Proc2
 
+module test1 where
+  term-p : SRTerm p ℕ ℕ
+  term-p = compute {B = 𝟙 ×-SR ℕ} (λ x → tt , x) ∷ send ℕ q ∷ recv ℕ q ∷ compute snd ∷ []
+
+  term-q : SRTerm q 𝟙 𝟙
+  term-q = recv ℕ p ∷ compute (λ (x , n) -> (x , suc n)) ∷ send ℕ p ∷ []
+
+  start : State (EnvSRTerm {Proc2})
+  start p = ℕ , ℕ , term-p , 0
+  start q = 𝟙 , 𝟙 , term-q , tt
+
+  end : State (EnvSRTerm {Proc2})
+  end p = ℕ , ℕ , [] , 1
+  end q = 𝟙 , 𝟙 , [] , tt
+
+  trace : Trace EnvSRTerm start end
+  trace = {!!} -- ((compute p (λ x → tt , x)) , {!compute ? ? ? ?!}) ∷ {!!}
 
 
 
