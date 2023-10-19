@@ -13,10 +13,10 @@ record Env : Set lone where
   field P : Set
   field E : P -> Set
   field Op : Set
-  -- field op : E -> Op
   field π : Op -> 𝒫 P
-  -- field act : ∀ x -> (∀(p : ∑ (π x)) -> E (fst p)) -> 𝒫 (∀(p : ∑ (π x)) -> E (fst p)) -- (∑ (π x) -> E)
   field act : ∀ x -> (∀ p -> π x p -> E p) -> 𝒫 (∀ p -> π x p -> E p)
+  -- field act : ∀ x -> (∀(p : ∑ (π x)) -> E (fst p)) -> 𝒫 (∀(p : ∑ (π x)) -> E (fst p)) -- (∑ (π x) -> E)
+  -- field op : E -> Op
 
 open Env
 
@@ -40,9 +40,6 @@ module _ (e : Env) where
 ------------------------------------------------------------------------
 -- example: the SR (send-receive) language
 
-open import Data.Nat renaming (ℕ to Nat ; _+_ to _+-ℕ_)
-open import Data.Bool
-open import Data.Unit renaming (⊤ to Unit)
 
 data SRType : Set where
   𝔹 ℕ 𝟙 : SRType
